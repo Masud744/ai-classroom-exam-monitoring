@@ -1,98 +1,113 @@
-Project Title: AI Classroom & Exam Monitoring System
+Project Title: AI Classroom and Exam Monitoring System (Full Stack AI Platform)
 
-Project Overview:
-This project is an AI-based Classroom and Online Exam Monitoring System that uses Computer Vision, Machine Learning, and Web Technologies to monitor students in real-time through a webcam during online classes and exams. The system analyzes student behavior such as attention level, head movement, eye gaze direction, sleep detection, phone usage, multiple person detection, and suspicious activities. Based on these observations, the system calculates an Attention Score during learning sessions and a Suspicious Activity Score during exams.
+We are planning to build a complete AI-based classroom and online exam monitoring platform that includes a local AI monitoring client, backend server, database, authentication system, and web dashboards for students and teachers.
 
-The system operates in two main modes:
+This project is not just a computer vision script; it is a full system consisting of multiple components working together.
 
-1. Learning Mode (Classroom Monitoring Mode)
-2. Exam Mode (AI Proctoring Mode)
+System Overview:
+The system will monitor students during online classes or exams using a camera and computer vision. The AI system will detect behaviors such as face presence, multiple faces, eye direction, head pose, sleeping (eyes closed), talking (mouth movement), and phone detection. Based on these detections, the system will calculate an Attention Score (focus level) and a Suspicious Score (cheating probability). These scores and behavior logs will be sent to a backend server and stored in a database. Teachers will be able to monitor students live and view reports, while students will be able to see their own results.
 
-In Learning Mode, the system monitors whether a student is paying attention to the screen, sleeping, looking away frequently, or leaving the seat. It calculates an attention score over time and generates analytics such as focus graphs, attendance, and student performance reports.
+System Architecture:
+Student Website (Login / Start Exam)
+↓
+Download / Run Monitoring Client App (.exe)
+↓
+AI Monitoring Client (Python + OpenCV + MediaPipe + YOLO)
+↓
+Send Monitoring Data → FastAPI Backend (Render)
+↓
+Supabase Database (PostgreSQL)
+↓
+Web Dashboard (Netlify)
+↓
+Teacher Monitoring / Reports / Analytics
 
-In Exam Mode, the system acts as an AI proctoring system. It detects cheating-related behaviors such as looking left/right repeatedly, using a mobile phone, multiple faces appearing in the camera, talking during the exam, or leaving the seat. The system logs suspicious activities, captures screenshots, and calculates a suspicious activity score. If the suspicious score crosses a threshold, the system generates alerts.
+Main System Components:
 
-System Objectives:
+1. Monitoring Client Application (runs locally on student PC)
+2. AI Monitoring System (computer vision + behavior detection)
+3. FastAPI Backend Server
+4. Supabase Database
+5. Authentication System (Student & Teacher login)
+6. Student Dashboard
+7. Teacher Dashboard
+8. Reports and Charts
+9. Deployment (Render + Netlify)
+10. GitHub for source code and client distribution
 
-* Monitor student attention during online learning
-* Automatically track attendance using face detection
-* Detect sleep, distraction, and absence
-* Detect cheating behaviors during online exams
-* Generate attention and suspicious activity scores
-* Store logs and analytics in a database
-* Provide a teacher/admin dashboard for monitoring
-* Generate reports and analytics graphs
-* Build a real-time AI monitoring system
+AI Monitoring Features:
 
-Core Technologies:
+* Face Detection
+* Face Count (multiple face detection)
+* Face Landmarks (MediaPipe Face Mesh)
+* Eye Tracking (eye direction)
+* Head Pose Detection (looking left/right/up/down)
+* Sleep Detection (eyes closed using EAR)
+* Mouth/Talking Detection (using MAR)
+* Phone Detection (YOLO object detection)
+* Attention Score Calculation
+* Suspicious Score Calculation
+* Behavior Status Display
+* Periodic Log Sending to Backend
 
-* Computer Vision (OpenCV, MediaPipe)
-* Machine Learning / Deep Learning
-* Object Detection (YOLO for phone detection)
-* Backend API (FastAPI or Flask)
-* Frontend Dashboard (React)
-* Database (MongoDB or MySQL)
-* Real-time video processing
-* Cloud Deployment (Docker, AWS/Render/VPS)
+User Roles:
 
-Main Computer Vision Modules:
+1. Student:
 
-1. Face Detection
-2. Face Recognition (optional for attendance)
-3. Eye Gaze Detection
-4. Head Pose Estimation
-5. Eye Closure / Sleep Detection
-6. Mouth Detection (Talking Detection)
-7. Phone Detection (Object Detection Model)
-8. Multiple Face Detection
-9. Person Absence Detection
+   * Sign up / Login
+   * Start exam
+   * Run monitoring client
+   * View own attention score
+   * View own suspicious score
+   * View history and reports
+   * Cannot see other students
 
-Attention Score Logic (Learning Mode):
-The system calculates attention score based on:
+2. Teacher/Admin:
 
-* Looking at screen
-* Eyes open
-* Head facing forward
-* Face present in frame
-* Not using phone
-* Not sleeping
+   * Login
+   * View all students
+   * Live monitoring dashboard
+   * Suspicious alerts
+   * View reports and analytics
+   * See charts (attention vs time, suspicious vs time)
 
-Suspicious Activity Score Logic (Exam Mode):
-The system increases suspicious score when:
+Database Tables (Planned):
 
-* Looking left/right frequently
-* Phone detected
-* Multiple faces detected
-* Talking detected
-* Leaving seat
-* Face not visible for long time
+* users (student/teacher info)
+* exams
+* sessions
+* monitoring_logs
+* scores
+* alerts
 
-System Architecture Flow:
-Webcam → Computer Vision Models → Behavior Detection → Scoring Engine → Backend API → Database → Dashboard → Reports & Alerts
+Technology Stack:
 
-Database Will Store:
+* Python
+* OpenCV
+* MediaPipe
+* YOLOv8
+* FastAPI
+* Supabase (PostgreSQL + Auth)
+* HTML / CSS / JavaScript 
+* Chart.js
+* Render (Backend Deployment)
+* Netlify (Frontend Deployment)
+* PyInstaller (Convert monitoring client to EXE)
+* GitHub (Repository + Releases)
 
-* Student Information
-* Session Information
-* Attention Logs
-* Suspicious Activity Logs
-* Screenshots
-* Attendance Records
-* Reports
+Development Roadmap:
+Phase 1 – Computer Vision Modules
+Phase 2 – Behavior Analysis & Scoring
+Phase 3 – FastAPI Backend
+Phase 4 – Supabase Database Integration
+Phase 5 – Logging System
+Phase 6 – Authentication System
+Phase 7 – Student Dashboard
+Phase 8 – Teacher Dashboard
+Phase 9 – Charts & Reports
+Phase 10 – Monitoring Client App (.exe)
+Phase 11 – Deployment (Render + Netlify)
+Phase 12 – Final System Integration
 
-Dashboard Features:
-
-* Live student monitoring
-* Attention score display
-* Suspicious activity alerts
-* Attendance list
-* Focus analytics graphs
-* Exam reports
-* Student activity logs
-* Screenshot evidence
-* Session history
-
-Expected Outcome:
-This project will be a full-stack AI system combining Computer Vision, Machine Learning, Backend Development, Database Management, and Frontend Dashboard to build a real-time intelligent student monitoring and exam proctoring system. The system can be used in online learning platforms, universities, training centers, and remote examination systems.
-
-This project is intended to be a large-scale portfolio project / final year project / research project demonstrating skills in AI, Computer Vision, IoT concepts, Backend APIs, Databases, and Dashboard Development.
+Final Goal:
+Build a full AI-based monitoring platform where students are monitored locally by an AI client, data is sent to a backend server, stored in a database, and teachers can monitor students through a web dashboard with live data, alerts, and reports.

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0f; color: #fff; font-family: 'Segoe UI', sans-serif; }
+
+    .navbar {
+      background: #12121a;
+      border-bottom: 1px solid #1e1e2e;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .navbar h1 { font-size: 16px; color: #00d4ff; font-weight: 700; }
+    .logout-btn {
+      padding: 7px 16px;
+      background: transparent;
+      border: 1px solid #333;
+      color: #aaa;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .logout-btn:hover { border-color: #f87171; color: #f87171; }
+
+    .main { padding: 24px 28px; }
+
+    .welcome {
+      background: linear-gradient(135deg, #0d1f2d, #0d2e1a);
+      border: 1px solid #1e2e2e;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .welcome h2 { font-size: 20px; color: #fff; }
+    .welcome p { font-size: 13px; color: #666; margin-top: 4px; }
+    .status-badge {
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .status-badge.good { background: #0d2e1a; color: #4ade80; border: 1px solid #166534; }
+    .status-badge.warning { background: #2e1f0d; color: #fbbf24; border: 1px solid #854d0e; }
+    .status-badge.danger { background: #2e0d0d; color: #f87171; border: 1px solid #991b1b; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card .label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 32px; font-weight: 700; margin-top: 8px; }
+    .stat-card .value.cyan { color: #00d4ff; }
+    .stat-card .value.green { color: #4ade80; }
+    .stat-card .value.amber { color: #fbbf24; }
+    .stat-card .value.red { color: #f87171; }
+
+    .score-display {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .score-card {
+      flex: 1;
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+    .score-card .title { font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .score-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 700;
+      border: 4px solid;
+    }
+    .score-circle.green { border-color: #4ade80; color: #4ade80; background: #4ade8011; }
+    .score-circle.amber { border-color: #fbbf24; color: #fbbf24; background: #fbbf2411; }
+    .score-circle.red { border-color: #f87171; color: #f87171; background: #f8717111; }
+    .score-card .desc { font-size: 12px; color: #666; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card h2 {
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .chart-wrap { position: relative; height: 200px; }
+
+    .tip-list { list-style: none; }
+    .tip-list li {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #0f0f18;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #aaa;
+      border-left: 3px solid #00d4ff;
+    }
+    .tip-list li span { color: #00d4ff; font-weight: 600; }
+
+    .full-card {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .full-card h2 {
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .table-wrap { overflow-x: auto; max-height: 300px; overflow-y: auto; }
+    .logs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .logs-table th {
+      text-align: left;
+      padding: 8px 12px;
+      color: #555;
+      font-weight: 500;
+      border-bottom: 1px solid #1e1e2e;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .logs-table td { padding: 10px 12px; border-bottom: 1px solid #0f0f18; color: #aaa; }
+    .badge {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.danger { background: #2e0d0d; color: #f87171; }
+    .badge.warning { background: #2e1f0d; color: #fbbf24; }
+    .badge.success { background: #0d2e1a; color: #4ade80; }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <h1>⬡ AI EXAM MONITOR — Student Dashboard</h1>
+  <div style="display:flex; align-items:center; gap:16px;">
+    <span style="font-size:13px;color:#666;" id="welcomeText"></span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Welcome Banner -->
+  <div class="welcome">
+    <div>
+      <h2 id="welcomeName">Welcome!</h2>
+      <p>Your monitoring session is being tracked in real time.</p>
+    </div>
+    <div id="overallStatus" class="status-badge good">Good Standing</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">Total Sessions</div>
+      <div class="value cyan" id="totalSessions">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Avg Attention</div>
+      <div class="value green" id="avgAttention">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Avg Suspicious</div>
+      <div class="value amber" id="avgSuspicious">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Alerts</div>
+      <div class="value red" id="myAlerts">—</div>
+    </div>
+  </div>
+
+  <!-- Latest Score Display -->
+  <div class="score-display">
+    <div class="score-card">
+      <div class="title">Latest Attention Score</div>
+      <div class="score-circle green" id="latestAttention">—</div>
+      <div class="desc">Higher is better (0-100)</div>
+    </div>
+    <div class="score-card">
+      <div class="title">Latest Suspicious Score</div>
+      <div class="score-circle green" id="latestSuspicious">—</div>
+      <div class="desc">Lower is better (0-100)</div>
+    </div>
+    <div class="score-card">
+      <div class="title">Improvement Tips</div>
+      <ul class="tip-list" id="tipList">
+        <li><span>💡</span> Loading your tips...</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="grid-2">
+    <div class="card">
+      <h2>My Attention Score Over Time</h2>
+      <div class="chart-wrap">
+        <canvas id="attChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h2>My Suspicious Score Over Time</h2>
+      <div class="chart-wrap">
+        <canvas id="suspChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Table -->
+  <div class="full-card">
+    <h2>My Monitoring History</h2>
+    <div class="table-wrap">
+      <table class="logs-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Attention</th>
+            <th>Suspicious</th>
+            <th>Phone</th>
+            <th>Talking</th>
+            <th>Eyes</th>
+            <th>Looking</th>
+          </tr>
+        </thead>
+        <tbody id="myLogsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API = "http://localhost:8000/api";
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!user) window.location.href = 'login.html';
+
+  const userName = user?.user_metadata?.full_name || user?.email || 'Student';
+  document.getElementById('welcomeText').textContent = userName;
+  document.getElementById('welcomeName').textContent = `Welcome, ${userName}!`;
+
+  // Student ID — এখন email prefix ব্যবহার করছি
+  const studentId = user?.email || "student@test.com";
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+
+  let attChart, suspChart;
+
+  function initCharts() {
+    const opts = (color) => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 10 } }, grid: { color: '#1e1e2e' } },
+        y: { min: 0, max: 100, ticks: { color: '#555' }, grid: { color: '#1e1e2e' } }
+      }
+    });
+
+    attChart = new Chart(document.getElementById('attChart'), {
+      type: 'line',
+      data: { labels: [], datasets: [{ data: [], borderColor: '#4ade80', backgroundColor: '#4ade8011', tension: 0.4, fill: true, pointRadius: 3 }] },
+      options: opts('#4ade80')
+    });
+
+    suspChart = new Chart(document.getElementById('suspChart'), {
+      type: 'line',
+      data: { labels: [], datasets: [{ data: [], borderColor: '#f87171', backgroundColor: '#f8717111', tension: 0.4, fill: true, pointRadius: 3 }] },
+      options: opts('#f87171')
+    });
+  }
+
+  function getScoreColor(score, isAttention) {
+    if (isAttention) {
+      return score >= 70 ? 'green' : score >= 40 ? 'amber' : 'red';
+    } else {
+      return score < 30 ? 'green' : score < 60 ? 'amber' : 'red';
+    }
+  }
+
+  function generateTips(logs) {
+    const tips = [];
+    const phoneCount   = logs.filter(l => l.phone_detected).length;
+    const talkingCount = logs.filter(l => l.talking).length;
+    const eyesCount    = logs.filter(l => l.eyes_closed).length;
+    const awayCount    = logs.filter(l => !l.looking_forward).length;
+
+    if (phoneCount > 0)   tips.push(`<span>📱</span> Phone detected ${phoneCount} times — keep it away`);
+    if (talkingCount > 0) tips.push(`<span>🤫</span> Talking detected ${talkingCount} times — stay silent`);
+    if (eyesCount > 0)    tips.push(`<span>👁️</span> Eyes closed ${eyesCount} times — stay awake`);
+    if (awayCount > 0)    tips.push(`<span>👀</span> Looking away ${awayCount} times — face the camera`);
+    if (tips.length === 0) tips.push(`<span>✅</span> Great job! Keep maintaining focus`);
+
+    return tips;
+  }
+
+  async function loadData() {
+    try {
+      const res  = await fetch(`${API}/logs/${studentId}`);
+      const data = await res.json();
+      const logs = data.logs || [];
+
+      if (logs.length === 0) {
+        document.getElementById('myLogsBody').innerHTML =
+          '<tr><td colspan="7" style="text-align:center;color:#666;padding:24px;">No monitoring data yet. Start a session!</td></tr>';
+        return;
+      }
+
+      // Stats
+      document.getElementById('totalSessions').textContent = logs.length;
+      const avgAtt  = Math.round(logs.reduce((s, l) => s + l.attention_score, 0) / logs.length);
+      const avgSusp = Math.round(logs.reduce((s, l) => s + l.suspicious_score, 0) / logs.length);
+      const alerts  = logs.filter(l => l.suspicious_score >= 50).length;
+      document.getElementById('avgAttention').textContent  = avgAtt;
+      document.getElementById('avgSuspicious').textContent = avgSusp;
+      document.getElementById('myAlerts').textContent      = alerts;
+
+      // Overall status
+      const statusEl = document.getElementById('overallStatus');
+      if (avgSusp >= 50) {
+        statusEl.textContent = '⚠ Under Review';
+        statusEl.className   = 'status-badge danger';
+      } else if (avgSusp >= 30) {
+        statusEl.textContent = '⚡ Needs Attention';
+        statusEl.className   = 'status-badge warning';
+      } else {
+        statusEl.textContent = '✓ Good Standing';
+        statusEl.className   = 'status-badge good';
+      }
+
+      // Latest scores
+      const latest    = logs[0];
+      const latAttEl  = document.getElementById('latestAttention');
+      const latSuspEl = document.getElementById('latestSuspicious');
+      latAttEl.textContent  = latest.attention_score;
+      latSuspEl.textContent = latest.suspicious_score;
+      latAttEl.className    = `score-circle ${getScoreColor(latest.attention_score, true)}`;
+      latSuspEl.className   = `score-circle ${getScoreColor(latest.suspicious_score, false)}`;
+
+      // Tips
+      const tips = generateTips(logs);
+      document.getElementById('tipList').innerHTML = tips.map(t => `<li>${t}</li>`).join('');
+
+      // Charts
+      const recent = [...logs].reverse().slice(0, 20);
+      const labels  = recent.map(l => new Date(l.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      attChart.data.labels = labels;
+      attChart.data.datasets[0].data = recent.map(l => l.attention_score);
+      attChart.update();
+      suspChart.data.labels = labels;
+      suspChart.data.datasets[0].data = recent.map(l => l.suspicious_score);
+      suspChart.update();
+
+      // Table
+      document.getElementById('myLogsBody').innerHTML = logs.slice(0, 50).map(l => `
+        <tr>
+          <td>${new Date(l.created_at).toLocaleString()}</td>
+          <td><span class="badge ${l.attention_score >= 70 ? 'success' : l.attention_score >= 40 ? 'warning' : 'danger'}">${l.attention_score}</span></td>
+          <td><span class="badge ${l.suspicious_score >= 50 ? 'danger' : 'success'}">${l.suspicious_score}</span></td>
+          <td>${l.phone_detected ? '📱 Yes' : '✓ No'}</td>
+          <td>${l.talking ? 'Yes' : 'No'}</td>
+          <td>${l.eyes_closed ? 'Closed' : 'Open'}</td>
+          <td>${l.looking_forward ? 'Forward' : 'Away'}</td>
+        </tr>`).join('');
+
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  initCharts();
+  loadData();
+  setInterval(loadData, 10000);
+</script>
+</body>
+</html>

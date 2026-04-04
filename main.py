@@ -38,7 +38,7 @@ yolo_frame            = None
 yolo_lock             = threading.Lock()
 
 last_log_time = time.time()
-STUDENT_ID    = "student_001"
+STUDENT_ID = "student@test.com"  
 
 
 def yolo_worker():

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0f; color: #fff; font-family: 'Segoe UI', sans-serif; }
+
+    .navbar {
+      background: #12121a;
+      border-bottom: 1px solid #1e1e2e;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .navbar h1 { font-size: 16px; color: #00d4ff; font-weight: 700; }
+    .navbar span { font-size: 13px; color: #666; }
+    .logout-btn {
+      padding: 7px 16px;
+      background: transparent;
+      border: 1px solid #333;
+      color: #aaa;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .logout-btn:hover { border-color: #f87171; color: #f87171; }
+
+    .main { padding: 24px 28px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .stat-card .label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 6px; }
+    .stat-card .value.cyan { color: #00d4ff; }
+    .stat-card .value.green { color: #4ade80; }
+    .stat-card .value.red { color: #f87171; }
+    .stat-card .value.amber { color: #fbbf24; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card h2 {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chart-wrap { position: relative; height: 240px; }
+
+    .logs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .logs-table th {
+      text-align: left;
+      padding: 8px 12px;
+      color: #666;
+      font-weight: 500;
+      border-bottom: 1px solid #1e1e2e;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .logs-table td { padding: 10px 12px; border-bottom: 1px solid #0f0f18; }
+    .logs-table tr:hover td { background: #0f0f18; }
+
+    .badge {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.danger { background: #2e0d0d; color: #f87171; }
+    .badge.warning { background: #2e1f0d; color: #fbbf24; }
+    .badge.success { background: #0d2e1a; color: #4ade80; }
+
+    .alert-list { max-height: 280px; overflow-y: auto; }
+    .alert-item {
+      padding: 12px;
+      border-radius: 8px;
+      background: #0f0f18;
+      margin-bottom: 8px;
+      border-left: 3px solid #f87171;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .alert-item .alert-info { font-size: 13px; }
+    .alert-item .alert-score { font-size: 18px; font-weight: 700; color: #f87171; }
+    .alert-time { font-size: 11px; color: #666; margin-top: 2px; }
+
+    .refresh-btn {
+      padding: 7px 16px;
+      background: #00d4ff22;
+      border: 1px solid #00d4ff44;
+      color: #00d4ff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      float: right;
+    }
+    .refresh-btn:hover { background: #00d4ff33; }
+
+    .full-card {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .full-card h2 {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .table-wrap { overflow-x: auto; max-height: 320px; overflow-y: auto; }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    .dot.green { background: #4ade80; }
+    .dot.red { background: #f87171; }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <h1>⬡ AI EXAM MONITOR — Teacher Dashboard</h1>
+  <div style="display:flex; align-items:center; gap:16px;">
+    <span id="welcomeText"></span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">Total Logs</div>
+      <div class="value cyan" id="totalLogs">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Avg Attention</div>
+      <div class="value green" id="avgAttention">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Avg Suspicious</div>
+      <div class="value amber" id="avgSuspicious">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">High Alerts</div>
+      <div class="value red" id="highAlerts">—</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="grid-2">
+    <div class="card">
+      <h2>Attention Score Over Time</h2>
+      <div class="chart-wrap">
+        <canvas id="attentionChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Suspicious Score Over Time</h2>
+      <div class="chart-wrap">
+        <canvas id="suspiciousChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts + Behavior -->
+  <div class="grid-2">
+    <div class="card">
+      <h2>🚨 High Suspicious Events</h2>
+      <div class="alert-list" id="alertList"></div>
+    </div>
+    <div class="card">
+      <h2>Behavior Breakdown</h2>
+      <div class="chart-wrap">
+        <canvas id="behaviorChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs Table -->
+  <div class="full-card">
+    <h2>
+      Recent Monitoring Logs
+      <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+    </h2>
+    <div class="table-wrap">
+      <table class="logs-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Student</th>
+            <th>Attention</th>
+            <th>Suspicious</th>
+            <th>Phone</th>
+            <th>Talking</th>
+            <th>Eyes</th>
+            <th>Looking</th>
+            <th>Faces</th>
+          </tr>
+        </thead>
+        <tbody id="logsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API = "http://localhost:8000/api";
+
+  // Auth check
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!user) window.location.href = 'login.html';
+  document.getElementById('welcomeText').textContent = user?.user_metadata?.full_name || user?.email || '';
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+
+  let attChart, suspChart, behavChart;
+
+  function initCharts() {
+    const chartOpts = (color) => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 10 } }, grid: { color: '#1e1e2e' } },
+        y: { min: 0, max: 100, ticks: { color: '#555' }, grid: { color: '#1e1e2e' } }
+      }
+    });
+
+    attChart = new Chart(document.getElementById('attentionChart'), {
+      type: 'line',
+      data: { labels: [], datasets: [{ data: [], borderColor: '#4ade80', backgroundColor: '#4ade8011', tension: 0.4, fill: true, pointRadius: 3 }] },
+      options: chartOpts('#4ade80')
+    });
+
+    suspChart = new Chart(document.getElementById('suspiciousChart'), {
+      type: 'line',
+      data: { labels: [], datasets: [{ data: [], borderColor: '#f87171', backgroundColor: '#f8717111', tension: 0.4, fill: true, pointRadius: 3 }] },
+      options: chartOpts('#f87171')
+    });
+
+    behavChart = new Chart(document.getElementById('behaviorChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Phone Detected', 'Talking', 'Eyes Closed', 'Looking Away'],
+        datasets: [{
+          data: [0, 0, 0, 0],
+          backgroundColor: ['#f87171', '#fbbf24', '#818cf8', '#34d399'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#888', font: { size: 11 }, padding: 12 }
+          }
+        }
+      }
+    });
+  }
+
+  async function loadData() {
+    try {
+      const res = await fetch(`${API}/logs`);
+      const data = await res.json();
+      const logs = data.logs || [];
+
+      if (logs.length === 0) {
+        document.getElementById('logsBody').innerHTML =
+          '<tr><td colspan="9" style="text-align:center;color:#666;padding:24px;">No logs yet</td></tr>';
+        return;
+      }
+
+      // Stats
+      document.getElementById('totalLogs').textContent = logs.length;
+      const avgAtt  = Math.round(logs.reduce((s, l) => s + l.attention_score, 0) / logs.length);
+      const avgSusp = Math.round(logs.reduce((s, l) => s + l.suspicious_score, 0) / logs.length);
+      const alerts  = logs.filter(l => l.suspicious_score >= 50).length;
+      document.getElementById('avgAttention').textContent  = avgAtt;
+      document.getElementById('avgSuspicious').textContent = avgSusp;
+      document.getElementById('highAlerts').textContent    = alerts;
+
+      // Charts — last 20 entries reversed
+      const recent = [...logs].reverse().slice(0, 20);
+      const labels = recent.map(l => new Date(l.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      attChart.data.labels  = labels;
+      attChart.data.datasets[0].data = recent.map(l => l.attention_score);
+      attChart.update();
+      suspChart.data.labels = labels;
+      suspChart.data.datasets[0].data = recent.map(l => l.suspicious_score);
+      suspChart.update();
+
+      // Behavior breakdown
+      behavChart.data.datasets[0].data = [
+        logs.filter(l => l.phone_detected).length,
+        logs.filter(l => l.talking).length,
+        logs.filter(l => l.eyes_closed).length,
+        logs.filter(l => !l.looking_forward).length,
+      ];
+      behavChart.update();
+
+      // Alert list
+      const highSusp = logs.filter(l => l.suspicious_score >= 50).slice(0, 10);
+      document.getElementById('alertList').innerHTML = highSusp.length === 0
+        ? '<p style="color:#666;font-size:13px;">No suspicious events</p>'
+        : highSusp.map(l => `
+          <div class="alert-item">
+            <div class="alert-info">
+              <div>${l.student_id}</div>
+              <div class="alert-time">${new Date(l.created_at).toLocaleString()}</div>
+            </div>
+            <div class="alert-score">${l.suspicious_score}</div>
+          </div>`).join('');
+
+      // Table
+      document.getElementById('logsBody').innerHTML = logs.slice(0, 50).map(l => `
+        <tr>
+          <td style="color:#666">${new Date(l.created_at).toLocaleString()}</td>
+          <td>${l.student_id}</td>
+          <td><span class="badge ${l.attention_score >= 70 ? 'success' : l.attention_score >= 40 ? 'warning' : 'danger'}">${l.attention_score}</span></td>
+          <td><span class="badge ${l.suspicious_score >= 50 ? 'danger' : 'success'}">${l.suspicious_score}</span></td>
+          <td><span class="dot ${l.phone_detected ? 'red' : 'green'}"></span>${l.phone_detected ? 'Yes' : 'No'}</td>
+          <td>${l.talking ? 'Yes' : 'No'}</td>
+          <td>${l.eyes_closed ? 'Closed' : 'Open'}</td>
+          <td>${l.looking_forward ? 'Forward' : 'Away'}</td>
+          <td>${l.face_count}</td>
+        </tr>`).join('');
+
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  initCharts();
+  loadData();
+  setInterval(loadData, 10000);
+</script>
+</body>
+</html>
