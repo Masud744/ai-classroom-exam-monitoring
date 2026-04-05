@@ -62,3 +62,11 @@ def get_alerts():
         .limit(50)\
         .execute()
     return {"alerts": response.data}
+
+@router.get("/students")
+def get_students():
+    response = supabase.table("monitoring_logs")\
+        .select("student_id")\
+        .execute()
+    ids = list(set([r["student_id"] for r in response.data]))
+    return {"students": ids}
