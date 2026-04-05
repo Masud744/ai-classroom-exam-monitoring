@@ -73,6 +73,8 @@ function clearFilter() {
 }
 
 async function loadData() {
+  document.getElementById('logsBody').innerHTML =
+    '<tr><td colspan="9" style="text-align:center;color:#666;padding:24px;">Loading... (first load may take 50s)</td></tr>';
   try {
     const url = currentFilter
       ? `${API}/logs/${encodeURIComponent(currentFilter)}`
@@ -154,3 +156,6 @@ async function loadData() {
 initCharts();
 loadData();
 setInterval(loadData, 10000);
+setInterval(() => {
+  fetch(`${API.replace('/api', '')}/`).catch(() => {});
+}, 30000);
