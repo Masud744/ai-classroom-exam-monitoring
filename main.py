@@ -5,11 +5,100 @@ from collections import deque
 import threading
 import requests
 import time
+import tkinter as tk
 from ultralytics import YOLO
 
 from computer_vision.behavior_analysis.attention_score import AttentionScorer
 from computer_vision.behavior_analysis.suspicious_score import SuspiciousScorer
 
+# ─── Login Window ─────────────────────────────────────────────────────────────
+
+def get_student_credentials():
+    result = {"email": None, "name": None, "success": False}
+
+    root = tk.Tk()
+    root.title("AI Exam Monitor — Login")
+    root.geometry("380x300")
+    root.configure(bg="#0a0a0f")
+    root.resizable(False, False)
+
+    root.update_idletasks()
+    x = (root.winfo_screenwidth() // 2) - 190
+    y = (root.winfo_screenheight() // 2) - 150
+    root.geometry(f"+{x}+{y}")
+
+    tk.Label(root, text="AI EXAM MONITOR", fg="#00d4ff", bg="#0a0a0f",
+             font=("Arial", 14, "bold")).pack(pady=(24, 4))
+    tk.Label(root, text="Student Monitoring Login", fg="#666666", bg="#0a0a0f",
+             font=("Arial", 10)).pack(pady=(0, 20))
+
+    tk.Label(root, text="EMAIL", fg="#888888", bg="#0a0a0f",
+             font=("Arial", 8)).pack(anchor="w", padx=40)
+    email_var = tk.StringVar()
+    tk.Entry(root, textvariable=email_var, bg="#12121a", fg="white",
+             insertbackground="white", relief="flat",
+             font=("Arial", 11), width=28).pack(padx=40, pady=(2, 12), ipady=6)
+
+    tk.Label(root, text="PASSWORD", fg="#888888", bg="#0a0a0f",
+             font=("Arial", 8)).pack(anchor="w", padx=40)
+    pass_var = tk.StringVar()
+    pass_entry = tk.Entry(root, textvariable=pass_var, show="•",
+                          bg="#12121a", fg="white", insertbackground="white",
+                          relief="flat", font=("Arial", 11), width=28)
+    pass_entry.pack(padx=40, pady=(2, 16), ipady=6)
+
+    msg_label = tk.Label(root, text="", fg="#f87171", bg="#0a0a0f",
+                         font=("Arial", 9))
+    msg_label.pack()
+
+    def do_login():
+        email    = email_var.get().strip()
+        password = pass_var.get().strip()
+        if not email or not password:
+            msg_label.config(text="Please fill all fields", fg="#f87171")
+            return
+        try:
+            msg_label.config(text="Connecting...", fg="#00d4ff")
+            root.update()
+            res = requests.post(
+                "https://ai-classroom-exam-monitoring.onrender.com/api/auth/login",
+                json={"email": email, "password": password},
+                timeout=20
+            )
+            data = res.json()
+            if res.ok:
+                role = data["user"]["user_metadata"].get("role", "student")
+                if role != "student":
+                    msg_label.config(text="Only students can use this app", fg="#f87171")
+                    return
+                result["email"]   = email
+                result["name"]    = data["user"]["user_metadata"].get("full_name", email)
+                result["success"] = True
+                root.destroy()
+            else:
+                msg_label.config(text="Invalid email or password", fg="#f87171")
+        except Exception:
+            msg_label.config(text="Server error. Try again.", fg="#f87171")
+
+    btn = tk.Button(root, text="Start Monitoring", command=do_login,
+                    bg="#00d4ff", fg="black", font=("Arial", 11, "bold"),
+                    relief="flat", cursor="hand2", width=22, pady=6)
+    btn.pack(pady=8)
+    pass_entry.bind("<Return>", lambda e: do_login())
+
+    root.mainloop()
+    return result
+
+
+# ─── Login ────────────────────────────────────────────────────────────────────
+creds = get_student_credentials()
+if not creds["success"]:
+    exit()
+
+STUDENT_ID   = creds["email"]
+STUDENT_NAME = creds["name"]
+
+# ─── MediaPipe Setup ──────────────────────────────────────────────────────────
 mp_face_detection = mp.solutions.face_detection
 mp_face_mesh      = mp.solutions.face_mesh
 
@@ -37,11 +126,8 @@ phone_boxes_global    = []
 yolo_frame            = None
 yolo_lock             = threading.Lock()
 
-last_log_time = time.time()
-STUDENT_ID   = "student@test.com"
-STUDENT_NAME = "Test Student"  
 
-
+# ─── YOLO Thread ──────────────────────────────────────────────────────────────
 def yolo_worker():
     global phone_detected_global, phone_boxes_global, yolo_frame
     while True:
@@ -69,6 +155,7 @@ yolo_thread = threading.Thread(target=yolo_worker, daemon=True)
 yolo_thread.start()
 
 
+# ─── Helper Functions ─────────────────────────────────────────────────────────
 def eye_aspect_ratio(eye_points):
     A = np.linalg.norm(eye_points[1] - eye_points[5])
     B = np.linalg.norm(eye_points[2] - eye_points[4])
@@ -91,10 +178,8 @@ def get_head_pose(face_landmarks, img_w, img_h):
             x, y = int(lm.x * img_w), int(lm.y * img_h)
             face_2d.append([x, y])
             face_3d.append([x, y, lm.z])
-    
     if len(face_2d) < 6:
         return True
-        
     face_2d = np.array(face_2d, dtype=np.float64)
     face_3d = np.array(face_3d, dtype=np.float64)
     focal_length = img_w
@@ -104,19 +189,12 @@ def get_head_pose(face_landmarks, img_w, img_h):
         [0,            0,            1         ]
     ])
     dist_matrix = np.zeros((4, 1), dtype=np.float64)
-    success, rot_vec, _ = cv2.solvePnP(
-        face_3d, face_2d, cam_matrix, dist_matrix
-    )
+    success, rot_vec, _ = cv2.solvePnP(face_3d, face_2d, cam_matrix, dist_matrix)
     if not success:
         return True
     rmat, _ = cv2.Rodrigues(rot_vec)
     angles, *_ = cv2.RQDecomp3x3(rmat)
-    x_angle = angles[0] * 360
-    y_angle = angles[1] * 360
-    
-    
-    
-    return (-15 <= y_angle <= 15) and (-15 <= x_angle <= 15)
+    return (-15 <= angles[1] * 360 <= 15) and (-15 <= angles[0] * 360 <= 15)
 
 
 def draw_panel(frame, flags, attention_score, suspicious_score):
@@ -125,8 +203,10 @@ def draw_panel(frame, flags, attention_score, suspicious_score):
     cv2.addWeighted(overlay, 0.65, frame, 0.35, 0, frame)
     cv2.putText(frame, "AI EXAM MONITOR", (10, 32),
                 cv2.FONT_HERSHEY_DUPLEX, 0.7, (0, 200, 255), 1)
-    cv2.line(frame, (10, 42), (248, 42), (60, 60, 60), 1)
-    y = 70
+    cv2.putText(frame, STUDENT_NAME[:28], (10, 52),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.45, (100, 100, 100), 1)
+    cv2.line(frame, (10, 60), (248, 60), (60, 60, 60), 1)
+    y = 82
     for label, ok in flags:
         color = (80, 220, 80) if ok else (60, 60, 220)
         cv2.putText(frame, f"* {label}", (14, y),
@@ -158,23 +238,29 @@ def send_log(attention_score, suspicious_score, phone_detected,
              talking, eyes_closed, looking_forward,
              face_count, multiple_faces, face_present):
     try:
-        requests.post("https://ai-classroom-exam-monitoring.onrender.com/api/log", json={
-            "student_id":      STUDENT_ID,
-            "student_name": STUDENT_NAME,
-            "attention_score": attention_score,
-            "suspicious_score": suspicious_score,
-            "phone_detected":  bool(phone_detected),
-            "talking":         bool(talking),
-            "eyes_closed":     bool(eyes_closed),
-            "looking_forward": bool(looking_forward),
-            "face_count":      int(face_count),
-            "multiple_faces":  bool(multiple_faces),
-            "face_present":    bool(face_present)
-        }, timeout=2)
+        requests.post(
+            "https://ai-classroom-exam-monitoring.onrender.com/api/log",
+            json={
+                "student_id":      STUDENT_ID,
+                "student_name":    STUDENT_NAME,
+                "attention_score": attention_score,
+                "suspicious_score": suspicious_score,
+                "phone_detected":  bool(phone_detected),
+                "talking":         bool(talking),
+                "eyes_closed":     bool(eyes_closed),
+                "looking_forward": bool(looking_forward),
+                "face_count":      int(face_count),
+                "multiple_faces":  bool(multiple_faces),
+                "face_present":    bool(face_present)
+            },
+            timeout=5
+        )
     except:
         pass
 
 
+# ─── Main Loop ────────────────────────────────────────────────────────────────
+last_log_time = time.time()
 cap = cv2.VideoCapture(0)
 
 while True:
@@ -242,7 +328,7 @@ while True:
         phone_detected, face_present, multiple_faces
     )
 
-    #every 5 seconds, send log to server in a separate thread
+    # Log every 5 seconds
     current_time = time.time()
     if current_time - last_log_time >= 5:
         threading.Thread(
