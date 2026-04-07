@@ -3,7 +3,7 @@ name: Build EXE
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -11,32 +11,36 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-    - name: Install dependencies
-      run: |
-        pip install opencv-python mediapipe==0.10.9 ultralytics requests numpy pyinstaller
+      - name: Install dependencies
+        run: |
+          pip install opencv-python mediapipe==0.10.9 ultralytics requests numpy pyinstaller
 
-    - name: Build EXE
-      run: |
-        pyinstaller --onefile --windowed --name "ProctorAI" --add-data "yolov8n.pt;." --add-data "computer_vision;computer_vision" --hidden-import "computer_vision.behavior_analysis.attention_score" --hidden-import "computer_vision.behavior_analysis.suspicious_score" main.py
+      - name: Download YOLOv8 model
+        run: |
+          python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
 
-    - name: Upload EXE as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ProctorAI-Windows
-        path: dist/ProctorAI.exe
+      - name: Build EXE
+        run: |
+          pyinstaller --onefile --windowed --name "ProctorAI" --add-data "yolov8n.pt;." --add-data "computer_vision;computer_vision" --hidden-import "computer_vision.behavior_analysis.attention_score" --hidden-import "computer_vision.behavior_analysis.suspicious_score" main.py
 
-    - name: Upload to Release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v2
-      with:
-        files: dist/ProctorAI.exe
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload EXE as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProctorAI-Windows
+          path: dist/ProctorAI.exe
+
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/ProctorAI.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
