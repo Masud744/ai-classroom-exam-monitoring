@@ -107,6 +107,13 @@ if not creds["success"]:
 STUDENT_ID   = creds["email"]
 STUDENT_NAME = creds["name"]
 
+# ─── Debug Print ──────────────────────────────────────────────────────────
+print(f"BASE_PATH: {BASE_PATH}")
+import os
+yolo_path = os.path.join(BASE_PATH, "yolov8n.pt")
+print(f"YOLO model path: {yolo_path}")
+print(f"YOLO file exists: {os.path.exists(yolo_path)}")
+
 # ─── MediaPipe Setup ──────────────────────────────────────────────────────────
 mp_face_detection = mp.solutions.face_detection
 mp_face_mesh      = mp.solutions.face_mesh
