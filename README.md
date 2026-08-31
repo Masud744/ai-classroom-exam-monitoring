@@ -1,16 +1,6 @@
 # ProctorAI — AI Classroom & Exam Monitoring System
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Live_Tested-35+_Real_Students-10b981?style=for-the-badge&logo=googleclassroom&logoColor=white" alt="35+ Students Tested">
-  <img src="https://img.shields.io/badge/Evaluated_Data-3500+_Real_Logs-7c3aed?style=for-the-badge&logo=postgresql&logoColor=white" alt="3500+ Real Logs">
-  <img src="https://img.shields.io/badge/Performance-Stress_Tested_&_Optimized-00d4ff?style=for-the-badge" alt="Stress Tested">
-</p>
-
-<p align="center">
-  <img src="screenshots/Thumbnil.png" alt="ProctorAI Project Banner" width="100%">
-</p>
-
-<p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/OpenCV-Computer Vision-5C3EE8?style=flat-square&logo=opencv&logoColor=white" alt="OpenCV">
@@ -30,38 +20,30 @@
 </p>
 
 <p align="center">
-  <strong>ProctorAI</strong> is an intelligent, high-performance, real-time proctoring and classroom exam monitoring system powered by Computer Vision and Deep Learning. It continuously analyzes head movement, gaze direction, eye closure, mouth movements (talking), and smartphone presence, transmitting telemetry to a responsive Teacher Analytics Dashboard.
+  AI-powered real-time exam monitoring system using computer vision to detect suspicious activities such as phone usage, head movement, eye closure, and talking, combined with a modern analytics dashboard for student behavior tracking.
 </p>
-
----
-
-> ### 🌟 Real-World Testing & Evaluation Milestone
->
-> 🎯 **35+ Real Students Evaluated Live:** Tested in real-time with authentic classroom and remote exam sessions across varying lighting, camera resolutions, and network conditions.  
-> 📈 **3,500+ Real Behavioral Data Points Recorded:** Over 3,500 continuous monitoring log entries stored and analyzed in PostgreSQL / Supabase, validating accuracy for head pose, EAR (eye aspect ratio), MAR (talking), and YOLO phone detection.  
-> ⚡ **Multi-Client Concurrency Stress-Tested:** Proven stability supporting multiple concurrent client streams with non-blocking threaded logging, smart pagination, and zero-latency analytics filtering.
 
 ---
 
 ## Table of Contents
 
-- [Overview](#-overview)
-- [Real-World Evaluation & Live Dataset](#-real-world-evaluation--live-dataset)
-- [System Architecture](#-system-architecture)
-- [Features](#-features)
-- [Project Structure](#-project-structure)
-- [Screenshots](#-screenshots)
-- [Technology Stack](#-technology-stack)
-- [How It Works](#-how-it-works)
-- [Computer Vision Modules](#-computer-vision-modules)
-- [Score Calculation](#-score-calculation)
-- [API Reference](#-api-reference)
-- [Database Schema](#-database-schema)
-- [Installation & Setup](#-installation--setup)
-- [Building the EXE](#-building-the-exe)
-- [Deployment](#-deployment)
-- [Known Difficulties & Solutions](#-known-difficulties--solutions)
-- [License](#-license)
+- [Overview](#overview)
+- [Real-World Evaluation & Live Dataset](#real-world-evaluation--live-dataset)
+- [System Architecture](#system-architecture)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Screenshots](#screenshots)
+- [Technology Stack](#technology-stack)
+- [How It Works](#how-it-works)
+- [Computer Vision Modules](#computer-vision-modules)
+- [Score Calculation](#score-calculation)
+- [API Reference](#api-reference)
+- [Database Schema](#database-schema)
+- [Installation & Setup](#installation--setup)
+- [Building the EXE](#building-the-exe)
+- [Deployment](#deployment)
+- [Known Difficulties & Solutions](#known-difficulties--solutions)
+- [License](#license)
 
 ---
 
@@ -81,15 +63,19 @@ The system was designed to solve a real problem: **how can a teacher monitor mul
 
 ## Real-World Evaluation & Live Dataset
 
-ProctorAI has been rigorously field-tested and benchmarked:
+ProctorAI has been field-tested and benchmarked using real classroom examination environments:
+
+- **35+ Live Students Evaluated:** Monitored across real-time test sessions under varying lighting conditions, camera resolutions, and network conditions.
+- **3,500+ Behavioral Data Points:** Over 3,500 continuous monitoring log entries stored and analyzed in PostgreSQL / Supabase, validating accuracy for head pose estimation, Eye Aspect Ratio (EAR), Mouth Aspect Ratio (MAR), and YOLOv8 phone detection.
+- **Multi-Client Stress Testing:** Proven stability supporting concurrent student monitoring streams with non-blocking threaded logging, smart pagination, and real-time dashboard analytics.
 
 | Metric | Benchmark Result | Description |
 | :--- | :--- | :--- |
-| **Active Students Tested** | **35+ Students** | Authenticated live students monitored across real testing sessions |
-| **Logged Data Points** | **3,500+ Records** | High-frequency behavioral telemetry stored in PostgreSQL |
-| **Detection Speed** | **30–60 FPS** | Low-latency inference with conditional FaceMesh & threaded YOLO |
-| **Logging Frequency** | **Every 5 Seconds** | Non-blocking async background telemetry pipeline |
-| **Dashboard Querying** | **Smart Auto-Pagination** | Capable of querying 10,000+ logs with sub-100ms response time |
+| Active Students Tested | 35+ Students | Authenticated live students monitored across real testing sessions |
+| Logged Data Points | 3,500+ Records | High-frequency behavioral telemetry stored in PostgreSQL |
+| Detection Speed | 30–60 FPS | Low-latency inference with conditional FaceMesh and threaded YOLO |
+| Logging Frequency | Every 5 Seconds | Non-blocking async background telemetry pipeline |
+| Dashboard Querying | Smart Auto-Pagination | Capable of querying 10,000+ logs with sub-100ms response time |
 
 ---
 
