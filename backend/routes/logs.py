@@ -32,43 +32,70 @@ def build_alert_description(log: MonitoringLog) -> str:
     return ", ".join(reasons) if reasons else "Suspicious behavior"
 
 
+def fetch_all_logs_paginated(student_id: str = None, max_rows: int = 10000):
+    all_data = []
+    batch_size = 1000
+    offset = 0
+    while offset < max_rows:
+        query = supabase.table("monitoring_logs").select("*")
+        if student_id:
+            query = query.eq("student_id", student_id)
+        query = query.order("created_at", desc=True).range(offset, offset + batch_size - 1)
+        res = query.execute()
+        if not res.data:
+            break
+        all_data.extend(res.data)
+        if len(res.data) < batch_size:
+            break
+        offset += batch_size
+    return all_data
+
+
 @router.get("/logs/{student_id}")
 def get_logs(student_id: str):
-    response = supabase.table("monitoring_logs")\
-        .select("*")\
-        .eq("student_id", student_id)\
-        .order("created_at", desc=True)\
-        .execute()
-    return {"logs": response.data}
+    data = fetch_all_logs_paginated(student_id=student_id)
+    return {"logs": data}
 
 
 @router.get("/logs")
 def get_all_logs():
-    response = supabase.table("monitoring_logs")\
-        .select("*")\
-        .order("created_at", desc=True)\
-        .execute()
-    return {"logs": response.data}
+    data = fetch_all_logs_paginated()
+    return {"logs": data}
+
 
 @router.get("/alerts")
 def get_alerts():
     response = supabase.table("alerts")\
         .select("*")\
         .order("created_at", desc=True)\
-        .limit(50)\
+        .limit(200)\
         .execute()
     return {"alerts": response.data}
 
 
 @router.get("/students")
 def get_students():
-    response = supabase.table("monitoring_logs")\
-        .select("student_id, student_name")\
-        .execute()
+    # Fetch across all recent logs to find all active students
+    all_rows = []
+    batch_size = 1000
+    offset = 0
+    while offset < 10000:
+        res = supabase.table("monitoring_logs")\
+            .select("student_id, student_name")\
+            .order("created_at", desc=True)\
+            .range(offset, offset + batch_size - 1)\
+            .execute()
+        if not res.data:
+            break
+        all_rows.extend(res.data)
+        if len(res.data) < batch_size:
+            break
+        offset += batch_size
+
     seen = {}
-    for r in response.data:
-        sid = r["student_id"]
-        if sid not in seen:
+    for r in all_rows:
+        sid = r.get("student_id")
+        if sid and sid not in seen:
             seen[sid] = r.get("student_name") or sid
     students = [{"id": k, "name": v} for k, v in seen.items()]
     return {"students": students}

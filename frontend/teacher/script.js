@@ -121,27 +121,91 @@ function initCharts() {
   });
 }
 
+let allStudentsList = [];
+let allLogsCache = [];
+let searchQuery = '';
+
 async function loadStudents() {
   try {
     const res  = await fetch(`${API}/students`);
     const data = await res.json();
-    const select = document.getElementById('studentSelect');
-    select.innerHTML = '<option value="">— All Students —</option>';
-    data.students.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.id;
-      opt.textContent = s.name;
-      select.appendChild(opt);
-    });
+    allStudentsList = data.students || [];
+
+    const countElem = document.getElementById('totalStudentsCount');
+    if (countElem) {
+      countElem.textContent = allStudentsList.length;
+    }
+
+    renderStudentDropdown();
   } catch(e) {
     console.error(e);
   }
 }
 
+function renderStudentDropdown() {
+  const select = document.getElementById('studentSelect');
+  if (!select) return;
+
+  const currentVal = currentFilter || '';
+  select.innerHTML = '<option value="">— All Students —</option>';
+
+  const filtered = searchQuery
+    ? allStudentsList.filter(s =>
+        (s.name && s.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (s.id && s.id.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : allStudentsList;
+
+  filtered.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.name;
+    if (s.id === currentVal) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+function handleStudentSearch(val) {
+  searchQuery = (val || '').trim();
+  renderStudentDropdown();
+
+  if (searchQuery) {
+    currentFilter = null;
+    const select = document.getElementById('studentSelect');
+    if (select) select.value = '';
+  }
+
+  applyCurrentFilterAndSearch();
+}
+
 function applySelectFilter() {
-  const val = document.getElementById('studentSelect').value;
+  const select = document.getElementById('studentSelect');
+  const val = select ? select.value : '';
   currentFilter = val || null;
+
+  if (currentFilter) {
+    const searchInput = document.getElementById('studentSearch');
+    if (searchInput) searchInput.value = '';
+    searchQuery = '';
+  }
+
   loadData();
+}
+
+function applyCurrentFilterAndSearch() {
+  let filteredLogs = [...allLogsCache];
+
+  if (currentFilter) {
+    filteredLogs = filteredLogs.filter(l => l.student_id === currentFilter);
+  } else if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredLogs = filteredLogs.filter(l =>
+      (l.student_name && l.student_name.toLowerCase().includes(q)) ||
+      (l.student_id && l.student_id.toLowerCase().includes(q))
+    );
+  }
+
+  updateUI(filteredLogs);
 }
 
 function updateUI(logs) {
@@ -232,7 +296,9 @@ async function loadData() {
 
     const res  = await fetch(url);
     const data = await res.json();
-    updateUI(data.logs || []);
+    allLogsCache = data.logs || [];
+
+    applyCurrentFilterAndSearch();
 
   } catch(e) {
     console.error(e);

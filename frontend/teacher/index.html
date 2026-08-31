@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </head>
 <body>
@@ -23,12 +23,24 @@
 <div class="main">
 
   <div class="filter-bar">
-  <label>Filter by Student:</label>
-  <select id="studentSelect" onchange="applySelectFilter()">
-    <option value="">— All Students —</option>
-  </select>
-  <span id="filterStatus"></span>
-</div>
+    <div class="filter-left">
+      <label for="studentSelect">Filter by Student:</label>
+      <select id="studentSelect" onchange="applySelectFilter()">
+        <option value="">— All Students —</option>
+      </select>
+    </div>
+    <div class="filter-right">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="studentSearch" placeholder="Search student name or email..." oninput="handleStudentSearch(this.value)">
+      </div>
+      <div class="student-count-pill" title="Total unique students with monitoring logs">
+        <span class="pill-dot"></span>
+        <span class="pill-label">Total Students:</span>
+        <strong id="totalStudentsCount">—</strong>
+      </div>
+    </div>
+  </div>
 
   <div class="stats-grid">
     <div class="stat-card">
@@ -108,7 +120,7 @@
   © 2024 ProctorAI — Developed by <a href="https://github.com/Masud744" target="_blank">Shahriar Alom Masud</a>
 </div>
 
-<script src="../config.js"></script>
-<script src="script.js"></script>
+<script src="../config.js?v=2.0"></script>
+<script src="script.js?v=2.0"></script>
 </body>
 </html>

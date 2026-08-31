@@ -1,1 +1,1 @@
-const API = "https://ai-classroom-exam-monitoring.onrender.com/api";
+const API = "http://localhost:8000/api";
